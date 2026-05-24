@@ -1,6 +1,6 @@
 # GitLab DevOps Agent
 
-An autonomous AI-powered DevOps assistant built with **Google ADK 2.0** and **Gemini 2.5 Flash**. It connects directly to your GitLab instance and performs real engineering tasks — reviewing code, triaging issues, diagnosing pipeline failures, and more — through natural language.
+An autonomous AI-powered DevOps assistant built with **Google ADK 2.0** and **Gemini 2.5 Flash**. It connects directly to your GitLab instance and performs real engineering tasks: reviewing code, triaging issues, diagnosing pipeline failures, and more. All through natural language.
 
 ---
 
