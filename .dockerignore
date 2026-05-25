@@ -1,0 +1,7 @@
+venv/
+.env
+gitlab_agent/.env
+.adk/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
