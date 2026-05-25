@@ -18,7 +18,7 @@ from gitlab_agent.tools import (
     auto_triage_all_issues,
 )
 
-load_dotenv()
+load_dotenv(override=False)
 
 root_agent = Agent(
     name="gitlab_devops_agent",
