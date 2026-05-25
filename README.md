@@ -4,6 +4,16 @@ An autonomous AI-powered DevOps assistant built with **Google ADK 2.0** and **Ge
 
 ---
 
+## Live Demo
+
+Try the agent live — no setup required:
+
+**[gitlab-devops-agent.your-domain.com](https://gitlab-devops-agent.your-domain.com)**
+
+> Deployed on Google Cloud Run. Point it at any public GitLab project and start asking questions.
+
+---
+
 ## Features
 
 | Capability | Description |
@@ -18,15 +28,19 @@ An autonomous AI-powered DevOps assistant built with **Google ADK 2.0** and **Ge
 | **Diagnose Pipeline** | Fetch failed job logs from a CI/CD pipeline and surface the root cause |
 | **Generate Release Notes** | Produce categorized markdown release notes from merged MRs over a date range |
 
+The agent also connects to **GitLab's official MCP server** (`https://gitlab.com/-/llm/mcp`), giving it access to GitLab's full native tool surface alongside the custom tools above.
+
 ---
 
 ## Tech Stack
 
 - [Google Agent Development Kit (ADK) 2.0](https://google.github.io/adk-docs/)
-- [Gemini 2.5 Flash](https://deepmind.google/technologies/gemini/) via Google AI / Vertex AI
+- [Gemini 2.5 Flash](https://deepmind.google/technologies/gemini/) via Vertex AI
+- [GitLab MCP Server](https://docs.gitlab.com/ee/user/gitlab_duo/mcp/) — GitLab's official Model Context Protocol server
 - [Python 3.11+](https://www.python.org/)
 - [python-gitlab](https://python-gitlab.readthedocs.io/) — GitLab REST API client
 - [python-dotenv](https://pypi.org/project/python-dotenv/) — environment variable management
+- [Docker](https://www.docker.com/) + [Google Cloud Run](https://cloud.google.com/run) — containerised deployment
 
 ---
 
@@ -54,18 +68,12 @@ source venv/bin/activate
 ### 3. Install dependencies
 
 ```bash
-pip install google-adk python-gitlab python-dotenv
+pip install -r requirements.txt
 ```
 
 ### 4. Configure environment variables
 
 Create a `.env` file inside the `gitlab_agent/` directory:
-
-```bash
-cp gitlab_agent/.env.example gitlab_agent/.env
-```
-
-Then fill in your credentials:
 
 ```env
 GITLAB_TOKEN=your_gitlab_personal_access_token
@@ -76,10 +84,10 @@ GOOGLE_GENAI_USE_VERTEXAI=1
 
 | Variable | Description |
 |---|---|
-| `GITLAB_TOKEN` | GitLab Personal Access Token with `api` scope |
+| `GITLAB_TOKEN` | GitLab Personal Access Token with `api` scope — also used to authenticate the MCP server |
 | `GITLAB_URL` | Your GitLab instance URL (use `https://gitlab.com` for GitLab.com) |
 | `GOOGLE_CLOUD_PROJECT` | GCP project ID for Vertex AI access |
-| `GOOGLE_GENAI_USE_VERTEXAI` | Set to `1` to use Vertex AI, `0` for Gemini API (AI Studio) |
+| `GOOGLE_GENAI_USE_VERTEXAI` | Set to `1` for Vertex AI, `0` for Gemini API (AI Studio) |
 
 > **Never commit your `.env` file.** It is already listed in `.gitignore`.
 
@@ -89,15 +97,44 @@ To create a GitLab Personal Access Token: **GitLab → User Settings → Access 
 
 ## Running the Agent
 
-Start the ADK web interface from the project root:
+### Locally
 
 ```bash
 adk web
 ```
 
-Then open [http://localhost:8000](http://localhost:8000) in your browser and select **gitlab_devops_agent** from the agent list.
+Open [http://localhost:8000](http://localhost:8000) and select **gitlab_devops_agent**.
 
-### Example prompts
+### Docker
+
+```bash
+docker build -t gitlab-devops-agent .
+docker run -p 8080:8080 \
+  -e GITLAB_TOKEN=your_token \
+  -e GITLAB_URL=https://gitlab.com \
+  -e GOOGLE_CLOUD_PROJECT=your_project_id \
+  -e GOOGLE_GENAI_USE_VERTEXAI=1 \
+  gitlab-devops-agent
+```
+
+Open [http://localhost:8080](http://localhost:8080).
+
+### Google Cloud Run
+
+```bash
+gcloud run deploy gitlab-devops-agent \
+  --source . \
+  --region us-central1 \
+  --port 8080 \
+  --set-env-vars GITLAB_URL=https://gitlab.com,GOOGLE_GENAI_USE_VERTEXAI=1 \
+  --set-secrets GITLAB_TOKEN=gitlab-token:latest,GOOGLE_CLOUD_PROJECT=gcp-project:latest
+```
+
+Environment variables set by Cloud Run take precedence over any local `.env` file.
+
+---
+
+## Example Prompts
 
 ```
 List all open issues in project my-org/my-repo
@@ -125,9 +162,11 @@ Generate release notes for my-org/my-repo since 2025-01-01
 ```
 gitlab-devops-agent/
 ├── gitlab_agent/
-│   ├── agent.py       # ADK agent definition and tool registration
+│   ├── agent.py       # ADK agent definition, tool registration, and MCP server config
 │   ├── tools.py       # GitLab API tool implementations
 │   └── .env           # Local environment variables (not committed)
+├── Dockerfile
+├── .dockerignore
 └── README.md
 ```
 
@@ -135,6 +174,6 @@ gitlab-devops-agent/
 
 ## Security
 
-- Store credentials exclusively in `.env` — never hard-code tokens in source files.
-- Grant the GitLab token the minimum required scope (`api` for full access, or narrow to `read_api` for read-only use cases).
-- Treat `auto_triage_all_issues` as a write operation — it modifies labels and posts comments on every open issue in the target project.
+- Store credentials exclusively in `.env` locally, or as Cloud Run secrets in production — never hard-code tokens.
+- Grant the GitLab token the minimum required scope (`api` for full access, or `read_api` for read-only use cases). The same token authenticates both the python-gitlab tools and the GitLab MCP server.
+- Treat `auto_triage_all_issues` as a write operation — it modifies labels and posts a comment on every open issue in the target project.
