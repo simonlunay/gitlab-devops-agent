@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from google.adk.agents import Agent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
+from google.adk.tools.mcp_tool.mcp_toolset import McpToolset, SseConnectionParams
 from google.genai import types
 from gitlab_agent.tools import (
     list_issues,
@@ -42,5 +43,11 @@ root_agent = Agent(
         add_issue_comment,
         merge_merge_request,
         auto_triage_all_issues,
+        McpToolset(
+            connection_params=SseConnectionParams(
+                url="https://gitlab.com/-/llm/mcp",
+                headers={"Authorization": f"Bearer {os.getenv('GITLAB_TOKEN')}"},
+            )
+        ),
     ]
 )
