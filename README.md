@@ -10,7 +10,7 @@ Try the agent live — no setup required:
 
 **[gitlab-devops-agent-792314829007.us-central1.run.app](https://gitlab-devops-agent-792314829007.us-central1.run.app)**
 
-> Deployed on Google Cloud Run. Point it at any public GitLab project and start asking questions.
+> Deployed on Google Cloud Run. Point it at any public GitLab project and start asking questions!
 
 ---
 
