@@ -4,7 +4,7 @@
 
 Built with Google ADK and Gemini 2.5 Flash on Vertex AI, integrated with GitLab's official MCP server, and containerized for Google Cloud Run. Built for the Google Cloud Rapid Agent Hackathon.
 
-![Demo](./assets/demo.gif)
+![Demo](gitlab.gif)
 <!-- Replace with a 10 to 15 second GIF: ask it to diagnose a failed pipeline, show the root cause it finds -->
 
 > **No hosted demo.** The agent runs on my own API credentials, so there's no public instance. You can run it locally with your own keys in a few minutes (see [Run it yourself](#run-it-yourself)).
